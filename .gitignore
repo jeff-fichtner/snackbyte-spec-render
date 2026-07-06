@@ -1,0 +1,43 @@
+# --- dependencies ---
+node_modules/
+.pnp
+.pnp.js
+
+# --- secrets / env (NEVER commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- npm / packaging artifacts ---
+# Packed tarballs from `npm pack` — build them, don't track them.
+*.tgz
+npm-debug.log*
+.npm/
+
+# --- generated output ---
+# spec-render emits a sibling .html per .md; these are derived, git-ignored.
+# (Scoped to specs/ so we never ignore real source .html if any ever exists.)
+specs/**/*.html
+
+# --- build output (this package ships src/, so dist/ is not used today;
+#     ignored defensively in case a build step is ever added) ---
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# --- agent folder: keep the reusable speckit skills, drop anything
+#     credential-ish the agent tooling might drop in ---
+.claude/settings.local.json
+.claude/*.local.json
+
+# --- editor / OS cruft ---
+.DS_Store
+.idea/
+*.swp
+*~
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
