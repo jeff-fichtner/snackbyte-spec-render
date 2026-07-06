@@ -30,8 +30,15 @@ What had to be present and correct for a working, non-leaky publish:
   ```
   `.` is the library entry. `./package.json` is exported deliberately so tooling can read
   it (a common thing that silently breaks under a strict `exports` map without it).
-- **`bin`** — `{ "spec-render": "./src/cli.mjs" }`. The CLI file has a `#!/usr/bin/env node`
+- **`bin`** — `{ "spec-render": "src/cli.mjs" }`. The CLI file has a `#!/usr/bin/env node`
   shebang and is ESM. No separate build; the shebang file _is_ the published file.
+  **Gotcha (caught only by the real registry):** the bin path must **not** have a `./`
+  prefix. `"./src/cli.mjs"` is silently stripped on publish (`"bin[...] script name ...
+was invalid and removed"`) — which would ship a package with **no CLI**. Verdaccio's
+  older validation did not catch this; npmjs.org did. Template fact: bin values are
+  bare relative paths (`src/cli.mjs`), and `npm pkg fix` enforces it. This is also a
+  reason the pack-and-install smoke test should assert the `bin` symlink exists after a
+  **real** (or real-validation) publish, not just after `npm install <tarball>`.
 - **`files` allowlist** — `["src/", "README.md", "LICENSE"]`. Allowlist, not `.npmignore`.
   Everything else (tests, fixtures, tsconfig, eslint/prettier config, `.specify/`,
   `.claude/`, `environments.json`, `.github/`, `DECISIONS.md`) is correctly **excluded**
