@@ -1,0 +1,54 @@
+# Release flow for @snackbyte/spec-render — consumes
+# jeff-fichtner/snackbyte-release-flow-action@v1.
+#
+# This is a LIBRARY consumer (version-strategy: package-json): the version is the
+# intentional SemVer set in package.json, and the Action tags it verbatim (v<version>).
+# It does NOT invent a build-id patch.
+#
+# Release ritual:
+#   1. Bump `version` in package.json to the SemVer you intend.
+#   2. Push/merge to main.
+#   3. The Action tags v<version>; the gated step below runs `npm publish`.
+#   4. If you forgot to bump, the tag already exists → the Action fails loudly. Bump
+#      and push again — that guard is intentional.
+#
+# Prerequisite before this can publish: an `NPM_TOKEN` repo secret (granular automation
+# token, scoped to @snackbyte/*). Until that exists this is Phase-1 scaffolding — CI-on-tag
+# is the Phase-2 on-ramp; manual `npm publish --access public` is the Phase-1 path.
+name: release
+
+on:
+  push:
+    branches: [main] # the only release channel (see environments.json)
+
+permissions:
+  contents: write # push the derived tag
+  id-token: write # provenance on publish (Phase 3); harmless earlier
+
+concurrency:
+  group: release-${{ github.ref_name }} # serialize per branch — no two pushes race
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # full history + tags — the derivation refuses a shallow clone
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - id: release
+        uses: jeff-fichtner/snackbyte-release-flow-action@v1
+        with:
+          version-strategy: package-json # library: tag the package.json version verbatim
+
+      # Publish the tagged release — gated on this being a real release channel.
+      - if: steps.release.outputs.is-env == 'true'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

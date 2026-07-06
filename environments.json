@@ -1,0 +1,5 @@
+{
+  "environments": [
+    { "name": "production", "branch": "main", "isPublicFace": true, "noindex": false, "tagSuffix": "" }
+  ]
+}
