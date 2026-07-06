@@ -9,6 +9,9 @@ node_modules/
 !.env.example
 *.pem
 *.key
+# Project-local npm config can carry a registry auth token — a real publish uses
+# the user-level ~/.npmrc, so keep any project .npmrc out of git by default.
+.npmrc
 
 # --- npm / packaging artifacts ---
 # Packed tarballs from `npm pack` — build them, don't track them.
