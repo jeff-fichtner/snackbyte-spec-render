@@ -1,0 +1,9 @@
+node_modules/
+coverage/
+dist/
+# Generated HTML views (derived artifacts)
+specs/**/*.html
+test/**/*.html
+# Spec Kit scaffold + agent config (not ours to format)
+.specify/
+.claude/

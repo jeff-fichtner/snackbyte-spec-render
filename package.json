@@ -1,0 +1,65 @@
+{
+  "name": "@snackbyte/spec-render",
+  "version": "0.1.0",
+  "description": "Render Spec Kit Markdown artifacts to interactive HTML — sticky auto-TOC, collapsible sections, anchored headings, syntax highlighting, task timelines, spec dashboards, plan views, cross-artifact nav, and lazy Mermaid.",
+  "keywords": [
+    "spec-kit",
+    "speckit",
+    "markdown",
+    "html",
+    "renderer",
+    "documentation",
+    "cli"
+  ],
+  "homepage": "https://github.com/jeff-fichtner/snackbyte-spec-render#readme",
+  "bugs": {
+    "url": "https://github.com/jeff-fichtner/snackbyte-spec-render/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeff-fichtner/snackbyte-spec-render.git"
+  },
+  "license": "MIT",
+  "author": "Jeff Fichtner",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "bin": {
+    "spec-render": "./src/cli.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write \"**/*.{js,mjs,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,mjs,json,md}\"",
+    "typecheck": "tsc",
+    "test": "vitest run",
+    "check:all": "npm run format:check && npm run lint && npm run typecheck && npm test",
+    "prepublishOnly": "npm run check:all"
+  },
+  "dependencies": {
+    "highlight.js": "^11.11.1",
+    "markdown-it": "^14.2.0",
+    "markdown-it-anchor": "^9.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^25.9.1",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}
