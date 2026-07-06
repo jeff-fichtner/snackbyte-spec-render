@@ -124,10 +124,27 @@ package-json`) from the release-flow Action's `CONSUMING.md`. Tags the intention
 
 ## 8. Smoke test (Constitution VI — test the artifact, not the tree)
 
-The minimum bar: `npm pack` → install the tarball in a clean throwaway dir → run the CLI
-against a real `specs/` tree and confirm real `.html` output. This must exercise the
-**packed files only** (the `files` allowlist), never the working tree. See the
-pack-and-install run recorded in the commit history / SMOKE section of the PR.
+Two layers were run, weakest-to-strongest:
+
+1. **pack + clean-install** — `npm pack` → `npm install <tarball>` into a throwaway
+   consumer → run the CLI against a real `specs/` tree. Exercises the **packed files
+   only** (the `files` allowlist), never the working tree. Also planted a decoy `.env`
+   and confirmed it was excluded from the tarball.
+2. **local-registry publish round-trip** — stand up a throwaway Verdaccio registry on
+   localhost, run the _real_ `npm publish --access public` against it (so
+   `prepublishOnly`/check:all fires and the actual publish code path runs), then
+   `npm install @snackbyte/spec-render` **by name** from that registry into a fresh
+   project and run the CLI. This proves by-name resolution + publish mechanics with
+   **zero** touch to npmjs.org — fully reversible. The only difference from a real
+   publish is the registry hostname.
+
+Template implication: layer 2 is a _reusable, credential-free_ pre-publish gate any
+graduate can run before the real publish. The template should ship a `smoke:registry`
+helper (spin up Verdaccio, publish, install-by-name, run, tear down). Gotchas learned:
+Verdaccio 6 disables self-registration (`max_users` doesn't re-enable it) — publish
+anonymously via `publish: $anonymous` on the scope + a dummy `_authToken` in a
+**project-local `.npmrc`**, and **git-ignore that `.npmrc`** so a token can't be
+committed and so it can't redirect a real publish to localhost.
 
 ---
 
