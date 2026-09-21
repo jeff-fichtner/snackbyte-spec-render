@@ -1,9 +1,10 @@
 node_modules/
 coverage/
 dist/
+package-lock.json
 # Generated HTML views (derived artifacts)
-specs/**/*.html
 test/**/*.html
-# Spec Kit scaffold + agent config (not ours to format)
+# Spec Kit scaffold, its specs and agent config are not ours to format
 .specify/
 .claude/
+specs/

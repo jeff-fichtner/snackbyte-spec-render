@@ -97,6 +97,21 @@ also takes `{ name?: string }` (the artifact filename used to pick a view).
 `renderFile` takes `{ specsRoot?: string }` (the root the feature label is made
 relative to).
 
+## Releases
+
+Released from CI by npm trusted publishing; every version on the registry carries a
+provenance attestation naming the commit and workflow that built it. `RELEASING.md`
+is the runbook; `npm run smoke:pack` and `npm run smoke:registry` are the checks that
+run before a publish.
+
+## Development notes
+
+This package ships its `.mjs` source as-is, with no build — the recorded opt-out from
+the template's TypeScript default. The reason is in `DECISIONS.md` §4: the render logic
+is a verbatim graft of working JavaScript, and full `strict` would mean rewriting it.
+`npm run check:all` is the gate (format, lint, a relaxed `checkJs` typecheck, the
+publish-contract check, tests); `CLAUDE.md` carries the rules for agents.
+
 ## License
 
 [MIT](./LICENSE) © Jeff Fichtner
