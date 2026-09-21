@@ -94,7 +94,7 @@ correct manual publish → Phase 2 CI-on-tag → Phase 3 provenance/audited → 
 scale). Each phase is independently shippable and additive; a later phase never rewrites
 an earlier one. **This package is at Phase 2** — correct (Phase 1, by hand, 2026-07-06)
 and published from CI by trusted publishing (the 2026-09-20 conformance to template
-0.4.0).
+0.6.0).
 
 ## Development Workflow
 
@@ -126,4 +126,4 @@ template's constitution is amended — not silently ignored.
   reads trusted publishing (OIDC) and names the bootstrap, which this package already
   did by hand; Principle V gains the *Source* row, recording this package as the JS
   ship-source opt-out with its justification in `DECISIONS.md` §4; the phasing note
-  moves this package to Phase 2. Made with the conformance PR to template 0.4.0.
+  moves this package to Phase 2. Made with the conformance PR to template 0.6.0.

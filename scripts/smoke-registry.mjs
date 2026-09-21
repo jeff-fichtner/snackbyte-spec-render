@@ -4,13 +4,9 @@
  * nothing real. Starts a throwaway Verdaccio on localhost, runs the REAL `npm publish`
  * code path against it (so `prepublishOnly` — build, check:all, --exists — fires),
  * installs the package BY NAME from that registry into a fresh consumer, imports it and
- * runs its bin. Credential-free; nothing is ever written to npmjs.org.
- *
- * spec-render: the registry proxies everything OUTSIDE the package's scope to npmjs.org
- * (read-only), because a by-name install of a package with runtime dependencies has to
- * resolve those dependencies from somewhere — the template's `uplinks: {}` 404s on the
- * first one (seen 2026-09-20). The scope itself has no proxy, so the package under test
- * can only come from the publish above. Ahead of the template; port back.
+ * runs its bin. Credential-free; nothing is ever PUBLISHED to npmjs.org — the local
+ * registry proxies reads for everything outside our scope, so a package's runtime
+ * dependencies resolve, but our scope has no uplink and cannot leak through.
  *
  *   npm run smoke:registry
  *
@@ -87,8 +83,11 @@ try {
   const port = await freePort();
   const registry = `http://localhost:${port}/`;
 
-  // 1. a registry that accepts anonymous publishes for our scope (served from local
-  //    storage only) and proxies every other package to npmjs.org for the dependencies
+  // 1. a registry that accepts anonymous publishes for our scope, has NO uplink for our
+  //    scope (so nothing can fall through to the real registry), and proxies reads for
+  //    everything else so a package's runtime dependencies install. Known limit: a
+  //    runtime dependency on ANOTHER package in our scope will not resolve here, by
+  //    the same rule — that case needs the dependency published locally first.
   const storage = join(tmp, 'storage');
   mkdirSync(storage);
   const config = join(tmp, 'config.yaml');
