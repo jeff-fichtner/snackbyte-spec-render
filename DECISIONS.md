@@ -1,5 +1,9 @@
 # DECISIONS — what packaging @snackbyte/spec-render actually required
 
+> Extracted into `snackbyte-npm-base` on 2026-09-20 (Phases 0–1, template 0.4.0). The
+> template is now the source of these facts; this file is the record of how they were
+> learned.
+
 This is the raw material for `snackbyte-npm-base`'s Phase 0 template extraction. The
 model (per the constitution): build **one real, correct package first**, then extract the
 template from what this package actually needed. Every list below is a candidate template
