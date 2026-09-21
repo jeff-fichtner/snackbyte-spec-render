@@ -1,14 +1,12 @@
 {
-  // Type-checking only — this package ships .mjs source, never compiled output.
-  // `tsc` (via the `typecheck` script) checks the JS via allowJs+checkJs and emits
-  // nothing.
+  // Type-checking only — this package ships .mjs source, never compiled output. `tsc`
+  // (the `typecheck` script) checks the JS via allowJs+checkJs and emits nothing.
   //
-  // The render logic is extracted verbatim from snackbyte-base (a deliberate
-  // faithful copy — see DECISIONS.md), so this is NOT full `strict` mode: forcing
-  // JSDoc type annotations onto copied JS would mean rewriting it. Instead we run
-  // `checkJs` with the checks that catch *real* defects (undefined variables, bad
-  // calls, typos, unreachable code) while tolerating the loose inference of
-  // annotation-free JS (empty-array `never[]`, empty-object `{}`, untyped params).
+  // Deliberately NOT full `strict`: a source-shipped JS package is usually a graft of
+  // working code, and forcing JSDoc annotations onto all of it means rewriting it. This
+  // profile keeps the checks that catch real defects (undefined variables, bad calls,
+  // typos, unreachable code) while tolerating annotation-free JS. See
+  // @snackbyte/spec-render's DECISIONS.md §4 for where this profile came from.
   "compilerOptions": {
     "target": "ES2023",
     "module": "NodeNext",
@@ -26,9 +24,8 @@
     "alwaysStrict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true,
-    "verbatimModuleSyntax": false
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*.mjs"],
-  "exclude": ["node_modules", "test", "dist", "coverage"]
+  "include": ["src/**/*.mjs", "test/**/*.mjs"],
+  "exclude": ["node_modules", "dist", "coverage"]
 }

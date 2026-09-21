@@ -1,20 +1,21 @@
-# Release flow for @snackbyte/spec-render — consumes
-# jeff-fichtner/snackbyte-release-flow-action@v1.
+# Release flow — consumes jeff-fichtner/snackbyte-release-flow-action@v1 (Recipe B,
+# library / package-json strategy) and publishes to npm by TRUSTED PUBLISHING.
 #
-# This is a LIBRARY consumer (version-strategy: package-json): the version is the
-# intentional SemVer set in package.json, and the Action tags it verbatim (v<version>).
-# It does NOT invent a build-id patch.
+# The ritual: bump `version` in package.json, merge to main. The Action tags v<version>
+# verbatim; the gated step below publishes. A forgotten bump means the tag already
+# exists and the Action fails loudly — that is the guard, not a bug.
 #
-# Release ritual:
-#   1. Bump `version` in package.json to the SemVer you intend.
-#   2. Push/merge to main.
-#   3. The Action tags v<version>; the gated step below runs `npm publish`.
-#   4. If you forgot to bump, the tag already exists → the Action fails loudly. Bump
-#      and push again — that guard is intentional.
+# No npm token exists anywhere. `permissions: id-token: write` lets GitHub mint a
+# short-lived OIDC identity for this run and npm accepts it, provided the package's
+# trusted publisher on npmjs.com names this repository and this workflow file. That can
+# only be configured on a package that already exists on npm, so the FIRST publish of a
+# new package is a bootstrap from a maintainer's machine (see RELEASING.md); every
+# publish after it is this workflow. Provenance is attested automatically.
 #
-# Prerequisite before this can publish: an `NPM_TOKEN` repo secret (granular automation
-# token, scoped to @snackbyte/*). Until that exists this is Phase-1 scaffolding — CI-on-tag
-# is the Phase-2 on-ramp; manual `npm publish --access public` is the Phase-1 path.
+# One file serves the template and every package spun out of it: the publish step is
+# gated on package.json's `private`. The template is private → it tags and skips, and
+# says so. A package is not → it publishes. A package accidentally left private skips
+# with a message instead of failing on npm's own refusal.
 name: release
 
 on:
@@ -23,7 +24,7 @@ on:
 
 permissions:
   contents: write # push the derived tag
-  id-token: write # provenance on publish (Phase 3); harmless earlier
+  id-token: write # trusted publishing (OIDC) — this is the whole credential
 
 concurrency:
   group: release-${{ github.ref_name }} # serialize per branch — no two pushes race
@@ -39,16 +40,27 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+
+      # Trusted publishing needs npm >= 11.5; the npm bundled with a Node release may
+      # be older. Cheap, and it tracks npm's own OIDC support.
+      - run: npm install -g npm@latest
+
+      - id: pkg
+        run: echo "private=$(node -p "require('./package.json').private === true")" >> "$GITHUB_OUTPUT"
 
       - id: release
         uses: jeff-fichtner/snackbyte-release-flow-action@v1
         with:
           version-strategy: package-json # library: tag the package.json version verbatim
 
-      # Publish the tagged release — gated on this being a real release channel.
-      - if: steps.release.outputs.is-env == 'true'
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - if: steps.release.outputs.is-env == 'true' && steps.pkg.outputs.private != 'true'
+        run: |
+          npm ci
+          npm publish --access public
+        # no NODE_AUTH_TOKEN: the OIDC identity above is the credential
+
+      - if: steps.release.outputs.is-env == 'true' && steps.pkg.outputs.private == 'true'
+        run: echo "private package — tagged ${{ steps.release.outputs.tag }}, not published"

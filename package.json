@@ -1,6 +1,6 @@
 {
   "name": "@snackbyte/spec-render",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Render Spec Kit Markdown artifacts to interactive HTML — sticky auto-TOC, collapsible sections, anchored headings, syntax highlighting, task timelines, spec dashboards, plan views, cross-artifact nav, and lazy Mermaid.",
   "keywords": [
     "spec-kit",
@@ -43,8 +43,11 @@
     "format:check": "prettier --check \"**/*.{js,mjs,json,md}\"",
     "typecheck": "tsc",
     "test": "vitest run",
-    "check:all": "npm run format:check && npm run lint && npm run typecheck && npm test",
-    "prepublishOnly": "npm run check:all"
+    "check:all": "npm run format:check && npm run lint && npm run typecheck && npm run check:contract && npm test",
+    "prepublishOnly": "npm run check:all && node scripts/check-publish-contract.mjs --exists",
+    "check:contract": "node scripts/check-publish-contract.mjs",
+    "smoke:pack": "node scripts/smoke-pack.mjs",
+    "smoke:registry": "node scripts/smoke-registry.mjs"
   },
   "dependencies": {
     "highlight.js": "^11.11.1",
