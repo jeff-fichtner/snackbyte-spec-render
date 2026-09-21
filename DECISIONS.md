@@ -1,6 +1,6 @@
 # DECISIONS — what packaging @snackbyte/spec-render actually required
 
-> Extracted into `snackbyte-npm-base` on 2026-09-20 (Phases 0–1, template 0.4.0). The
+> Extracted into `snackbyte-npm-base` on 2026-09-20 (Phases 0–1, template 0.6.0). The
 > template is now the source of these facts; this file is the record of how they were
 > learned.
 
