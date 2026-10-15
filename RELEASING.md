@@ -29,6 +29,14 @@ from a laptop. It exists because step 2 cannot happen before it.
 
 ## 2. Configure the trusted publisher, once
 
+> **Re-create it before the next release.** This repository was replaced on
+> 2026-10-14: same name, rewritten history, new repository ID. npm binds a trusted
+> publisher to the repository's ID at its first publish, so the existing entry will
+> likely reject this repository. Just before the next release, delete it and add it
+> again with the fields below; a new entry expires if no publish uses it within 2
+> days. `0.1.1`'s provenance links to commit `14868b0`, which no longer exists here
+> (the same tree is `576bb5e`). Remove this note once a release has published.
+
 On npmjs.com → the package → _Settings_ → _Trusted publisher_ → GitHub Actions:
 
 - **Organization or user**: the GitHub owner of this repository
