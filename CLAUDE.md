@@ -68,3 +68,8 @@ The phase specs live under `specs/` in the template repository.
 From `snackbyte-npm-base`'s constitution: `@snackbyte/*` scope, ESM-only, MIT, Node
 `>=24`, SemVer. Deviating from one is allowed with the reason recorded in this
 package's spec or plan — never by inertia.
+
+## Next
+
+The next work in this repo is reacting to changes in `snackbyte-speckit-engine`.
+Nothing is scoped yet.
