@@ -21,8 +21,9 @@ npm-debug.log*
 
 # --- generated output ---
 # spec-render emits a sibling .html per .md; these are derived, git-ignored.
-# (Scoped to specs/ so we never ignore real source .html if any ever exists.)
+# (Scoped to specs/ and examples/ so we never ignore real source .html if any ever exists.)
 specs/**/*.html
+examples/**/*.html
 
 # --- build output (this package ships src/, so dist/ is not used today;
 #     ignored defensively in case a build step is ever added) ---
