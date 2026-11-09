@@ -43,6 +43,8 @@ On npmjs.com → the package → _Settings_ → _Trusted publisher_ → GitHub A
 - **Repository**: this repository's name
 - **Workflow filename**: `release.yml`
 - **Environment**: leave empty
+- **Permissions**: publish. A stage-only entry refuses the workflow's `npm publish`
+  with `403 … OIDC permission denied for this action`.
 
 That's the credential. There is no token to create, store, scope or rotate — and
 nothing to leak. If you ever find an `NPM_TOKEN` secret on this repository, delete it;
