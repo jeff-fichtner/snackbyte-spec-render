@@ -19,6 +19,19 @@ styled shell:
 - **Lazy Mermaid** — the client-side renderer (loaded from jsDelivr) is injected only
   when a ` ```mermaid ` block is present; there is no Mermaid npm dependency
 
+## What it looks like
+
+`tasks.md` as a roadmap timeline:
+
+![The tasks roadmap view: overall progress, phase chips with progress rings, and the selected phase's tasks](https://raw.githubusercontent.com/jeff-fichtner/snackbyte-spec-render/main/docs/screenshots/tasks-timeline.png)
+
+`spec.md` as a dashboard:
+
+![The spec dashboard view: status chips, priority-badged user stories, and edge cases](https://raw.githubusercontent.com/jeff-fichtner/snackbyte-spec-render/main/docs/screenshots/spec-dashboard.png)
+
+Both are rendered from the sample feature in
+[`examples/specs/003-shared-lists`](https://github.com/jeff-fichtner/snackbyte-spec-render/tree/main/examples/specs/003-shared-lists).
+
 ## Requirements
 
 - **Node.js >= 24** (ESM-only package)

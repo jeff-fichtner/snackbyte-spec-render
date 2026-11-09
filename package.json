@@ -1,6 +1,6 @@
 {
   "name": "@snackbyte/spec-render",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Render Spec Kit Markdown artifacts to interactive HTML — sticky auto-TOC, collapsible sections, anchored headings, syntax highlighting, task timelines, spec dashboards, plan views, cross-artifact nav, and lazy Mermaid.",
   "keywords": [
     "spec-kit",

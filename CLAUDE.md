@@ -71,5 +71,4 @@ package's spec or plan — never by inertia.
 
 ## Next
 
-The next work in this repo is reacting to changes in `snackbyte-speckit-engine`.
-Nothing is scoped yet.
+No work is planned. The package is maintained as it stands.
