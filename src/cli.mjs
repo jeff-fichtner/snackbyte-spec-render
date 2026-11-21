@@ -75,8 +75,11 @@ function parseCommandLine(argv) {
       },
     });
   } catch (err) {
-    // parseArgs names the offending option first; its advice about `--` is noise here.
-    const option = /'([^']+)'/.exec(err.message)?.[1];
+    // An unknown option's message ends in advice about `--` that is noise here;
+    // every other parseArgs message ("Option '--watch' does not take an argument")
+    // is already the whole story.
+    const option =
+      err.code === 'ERR_PARSE_ARGS_UNKNOWN_OPTION' ? /'([^']+)'/.exec(err.message)?.[1] : null;
     throw new UsageError(option ? `Unknown option: ${option}` : err.message);
   }
   const { values, positionals } = parsed;
@@ -99,6 +102,11 @@ async function packageVersion() {
 
 // --- File walking ----------------------------------------------------------
 
+// Folders a walk never enters: installed packages and hidden folders (.git,
+// .specify, ...) hold Markdown that is not the project's specs. A folder named
+// as the target itself is still rendered.
+const skipDir = (name) => name === 'node_modules' || name.startsWith('.');
+
 async function* walk(dir) {
   let entries;
   try {
@@ -109,6 +117,7 @@ async function* walk(dir) {
   for (const e of entries) {
     const full = join(dir, e.name);
     if (e.isDirectory()) {
+      if (skipDir(e.name)) continue;
       yield* walk(full);
     } else if (e.isFile() && e.name.endsWith('.md')) {
       yield full;

@@ -83,7 +83,8 @@ spec-render --watch              # keep the views current while you edit
 spec-render --clean              # delete the generated views
 ```
 
-Paths are resolved against the directory you run it from. It exits `0` on success, `1`
+Paths are resolved against the directory you run it from. A directory is searched
+recursively, skipping `node_modules` and hidden folders (`.git`, `.specify`, …). It exits `0` on success, `1`
 when a path doesn't exist or a file fails to render (the other files still render), and
 `2` when the command line is wrong (an unknown option, more than one path).
 

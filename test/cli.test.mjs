@@ -65,6 +65,12 @@ describe('cli: command-line mistakes exit 2 and render nothing', () => {
     expect(await exists(join(cwd, 'specs', '001-login', 'spec.html'))).toBe(false);
   });
 
+  it('a value given to a switch is refused with parseArgs’ own reason', () => {
+    const r = run('--watch=yes');
+    expect(r.code).toBe(2);
+    expect(r.err).toMatch(/Option '(-w, )?--watch' does not take an argument/);
+  });
+
   it('more than one path is refused', async () => {
     await seedFeature();
     const r = run('specs/001-login/spec.md', 'specs/001-login/notes.md');
@@ -119,6 +125,28 @@ describe('cli: rendering', () => {
     expect(r.out).toContain('Rendered 1 file(s) to HTML.');
     expect(await exists(join(dir, 'spec.html'))).toBe(true);
     expect(await exists(join(dir, 'notes.html'))).toBe(false);
+  });
+
+  it('a walk skips node_modules and hidden folders', async () => {
+    const dir = await seedFeature(join(cwd, 'specs', '001-login'));
+    for (const skipped of ['node_modules/some-pkg', '.specify/templates']) {
+      await mkdir(join(cwd, skipped), { recursive: true });
+      await writeFile(join(cwd, skipped, 'README.md'), '# Not a spec\n');
+    }
+    const r = run('.');
+    expect(r.code).toBe(0);
+    expect(r.out).toContain('Rendered 2 file(s) to HTML.');
+    expect(await exists(join(dir, 'spec.html'))).toBe(true);
+    expect(await exists(join(cwd, 'node_modules', 'some-pkg', 'README.html'))).toBe(false);
+    expect(await exists(join(cwd, '.specify', 'templates', 'README.html'))).toBe(false);
+  });
+
+  it('a hidden folder named as the target is still rendered', async () => {
+    await mkdir(join(cwd, '.notes'));
+    await writeFile(join(cwd, '.notes', 'a.md'), '# A\n');
+    const r = run('.notes');
+    expect(r.code).toBe(0);
+    expect(await exists(join(cwd, '.notes', 'a.html'))).toBe(true);
   });
 
   it('says so when a directory holds no Markdown', async () => {
