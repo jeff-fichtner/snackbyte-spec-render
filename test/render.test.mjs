@@ -154,6 +154,12 @@ describe('generic view (renderMarkdown)', () => {
     expect(noMermaid).not.toContain('mermaid.esm.min.mjs');
   });
 
+  it('loads Mermaid from an exact version, never a range', () => {
+    const html = renderMarkdown(research);
+    const version = /https:\/\/cdn\.jsdelivr\.net\/npm\/mermaid@([^/]+)\//.exec(html)?.[1];
+    expect(version).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
   it('decorates priority and status markers as badges', () => {
     const html = renderMarkdown('# T\n\nItem (Priority: P1)\n\n**Status**: In-Progress\n');
     expect(html).toContain('class="badge p1"');

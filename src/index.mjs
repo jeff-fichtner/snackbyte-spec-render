@@ -35,7 +35,9 @@ export {
 // Sibling artifact keys probed for the cross-nav bar (same order as the bar).
 export const NAV_KEYS = ['spec', 'plan', 'tasks', 'research', 'data-model', 'quickstart'];
 
-const MERMAID_CDN = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+// An exact version: a page runs whatever this URL serves, so it names one release
+// rather than a range the CDN resolves to the newest match on the day it opens.
+const MERMAID_CDN = 'https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.esm.min.mjs';
 
 const exists = (p) =>
   access(p).then(
