@@ -9,14 +9,41 @@
 //   spec-render <path>          # render one .md file or one directory (recursively)
 //   spec-render --watch [path]  # render, then re-render on save (Ctrl-C to stop)
 //   spec-render --clean [path]  # remove generated .html alongside .md
+//   spec-render --help | --version
 //
 // The default target is ./specs relative to the current directory. This is the
-// CLI's cwd contract: unlike the in-repo script it was extracted from, it makes
-// no assumption about where the package itself is installed.
+// CLI's cwd contract: it makes no assumption about where the package itself is
+// installed.
+//
+// Exit codes: 0 success; 1 a path is missing or a file failed to render;
+// 2 the command line itself is wrong (an unknown option, too many paths).
 
-import { readdir, stat, unlink, access, watch } from 'node:fs/promises';
+import { readdir, readFile, stat, unlink, access, watch } from 'node:fs/promises';
 import { join, dirname, relative, resolve } from 'node:path';
+import { parseArgs } from 'node:util';
 import { renderFile } from './index.mjs';
+
+const USAGE = `Usage: spec-render [options] [path]
+
+Render Spec Kit Markdown artifacts (spec.md, plan.md, tasks.md, ...) to
+interactive HTML. Each <name>.md gets a sibling <name>.html.
+
+  path            a .md file, or a directory to render recursively
+                  (default: ./specs, resolved against the current directory)
+
+Options:
+  -w, --watch     render, then re-render each file when it is saved
+  -c, --clean     remove the generated .html next to each .md instead
+  -h, --help      show this help
+  -v, --version   show the installed version
+
+Examples:
+  spec-render                      render every .md under ./specs
+  spec-render specs/001-login      render one feature
+  spec-render --watch              keep the views current while you edit
+  spec-render --clean              delete the generated views
+
+Docs: https://github.com/jeff-fichtner/snackbyte-spec-render#readme`;
 
 const exists = (p) =>
   access(p).then(
@@ -30,7 +57,55 @@ const ROOT = process.cwd();
 const DEFAULT_SPECS_DIR = join(ROOT, 'specs');
 const rel = (p) => relative(ROOT, p) || '.';
 
+// A command-line mistake: printed with a pointer to --help, exit 2.
+class UsageError extends Error {}
+
+function parseCommandLine(argv) {
+  let parsed;
+  try {
+    parsed = parseArgs({
+      args: argv,
+      allowPositionals: true,
+      strict: true,
+      options: {
+        watch: { type: 'boolean', short: 'w' },
+        clean: { type: 'boolean', short: 'c' },
+        help: { type: 'boolean', short: 'h' },
+        version: { type: 'boolean', short: 'v' },
+      },
+    });
+  } catch (err) {
+    // An unknown option's message ends in advice about `--` that is noise here;
+    // every other parseArgs message ("Option '--watch' does not take an argument")
+    // is already the whole story.
+    const option =
+      err.code === 'ERR_PARSE_ARGS_UNKNOWN_OPTION' ? /'([^']+)'/.exec(err.message)?.[1] : null;
+    throw new UsageError(option ? `Unknown option: ${option}` : err.message);
+  }
+  const { values, positionals } = parsed;
+  if (positionals.length > 1) {
+    throw new UsageError(
+      `spec-render takes one path, got ${positionals.length}: ${positionals.join(' ')}\n` +
+        'Pass a directory to render everything under it.',
+    );
+  }
+  if (values.watch && values.clean) {
+    throw new UsageError('--watch and --clean cannot be used together.');
+  }
+  return { ...values, path: positionals[0] };
+}
+
+async function packageVersion() {
+  const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+  return pkg.version;
+}
+
 // --- File walking ----------------------------------------------------------
+
+// Folders a walk never enters: installed packages and hidden folders (.git,
+// .specify, ...) hold Markdown that is not the project's specs. A folder named
+// as the target itself is still rendered.
+const skipDir = (name) => name === 'node_modules' || name.startsWith('.');
 
 async function* walk(dir) {
   let entries;
@@ -42,6 +117,7 @@ async function* walk(dir) {
   for (const e of entries) {
     const full = join(dir, e.name);
     if (e.isDirectory()) {
+      if (skipDir(e.name)) continue;
       yield* walk(full);
     } else if (e.isFile() && e.name.endsWith('.md')) {
       yield full;
@@ -63,11 +139,6 @@ function specsRootFor(target, targetIsFile) {
     return DEFAULT_SPECS_DIR;
   }
   return dir;
-}
-
-async function resolveTarget(arg) {
-  if (!arg) return DEFAULT_SPECS_DIR;
-  return resolve(ROOT, arg);
 }
 
 // Watch the target directory and re-render a .md file when it changes.
@@ -106,15 +177,37 @@ async function watchAndRender(dir, specsRoot) {
 }
 
 async function main() {
-  const args = process.argv.slice(2);
-  const clean = args.includes('--clean');
-  const watchMode = args.includes('--watch');
-  const pathArg = args.find((a) => !a.startsWith('--'));
-  const target = await resolveTarget(pathArg);
+  let opts;
+  try {
+    opts = parseCommandLine(process.argv.slice(2));
+  } catch (err) {
+    if (!(err instanceof UsageError)) throw err;
+    console.error(`${err.message}\nRun "spec-render --help" for usage.`);
+    process.exitCode = 2;
+    return;
+  }
 
+  if (opts.help) {
+    console.log(USAGE);
+    return;
+  }
+  if (opts.version) {
+    console.log(await packageVersion());
+    return;
+  }
+
+  const target = opts.path ? resolve(ROOT, opts.path) : DEFAULT_SPECS_DIR;
   const s = await stat(target).catch(() => null);
   if (!s) {
-    console.error(`Path not found: ${target}`);
+    if (opts.path) {
+      console.error(`Path not found: ${opts.path}`);
+    } else {
+      console.error(
+        `No specs/ folder in ${ROOT}\n` +
+          'Run spec-render from your project root (where Spec Kit keeps specs/),\n' +
+          'or pass a path: spec-render <file.md | directory>. See "spec-render --help".',
+      );
+    }
     process.exitCode = 1;
     return;
   }
@@ -122,7 +215,7 @@ async function main() {
   let files = [];
   if (s.isFile()) {
     if (!target.endsWith('.md')) {
-      console.error('Target must be a .md file or a directory.');
+      console.error(`Not a Markdown file: ${opts.path}\nPass a .md file or a directory.`);
       process.exitCode = 1;
       return;
     }
@@ -133,7 +226,7 @@ async function main() {
 
   const specsRoot = specsRootFor(target, s.isFile());
 
-  if (clean) {
+  if (opts.clean) {
     let removed = 0;
     for (const f of files) {
       const htmlPath = f.replace(/\.md$/, '.html');
@@ -148,17 +241,33 @@ async function main() {
     return;
   }
 
-  let n = 0;
+  // One file failing does not stop the rest: each is reported, and the run
+  // exits 1 at the end if any failed.
+  let rendered = 0;
+  let failed = 0;
   for (const f of files) {
-    const out = await renderFile(f, { specsRoot });
-    console.log(`  ${rel(f)} -> ${rel(out)}`);
-    n++;
+    try {
+      const out = await renderFile(f, { specsRoot });
+      console.log(`  ${rel(f)} -> ${rel(out)}`);
+      rendered++;
+    } catch (err) {
+      console.error(`  error rendering ${rel(f)}: ${err.message}`);
+      failed++;
+    }
   }
-  console.log(n ? `\nRendered ${n} file(s) to HTML.` : 'No .md files found.');
+  if (!files.length) {
+    console.log(`No .md files found under ${rel(target)}.`);
+  } else {
+    console.log(`\nRendered ${rendered} file(s) to HTML.`);
+  }
+  if (failed) {
+    console.error(`${failed} file(s) failed to render.`);
+    process.exitCode = 1;
+  }
 
   // --watch keeps the process alive, re-rendering on save. Watch the directory
   // even when it started empty, so newly-created specs render automatically.
-  if (watchMode) {
+  if (opts.watch) {
     const watchDir = s.isFile() ? dirname(target) : target;
     await watchAndRender(watchDir, specsRoot);
   }
