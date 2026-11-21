@@ -180,8 +180,15 @@ describe('cli: --watch', () => {
     child.stdout.on('data', (d) => (out += d));
     try {
       await seen('Watching specs for changes');
-      await writeFile(join(dir, 'spec.md'), '# Login\n\nEdited while watching.\n');
-      await seen('] specs/001-login/spec.md -> specs/001-login/spec.html'); // the watch line carries a [time] stamp
+      // On Linux the recursive watcher attaches to subfolders asynchronously after
+      // the banner prints, so a save in the first moments can go unseen. Save again
+      // until the re-render line (it carries a [time] stamp) shows up.
+      const rerendered = '] specs/001-login/spec.md -> specs/001-login/spec.html';
+      for (let attempt = 0; attempt < 20 && !out.includes(rerendered); attempt++) {
+        await writeFile(join(dir, 'spec.md'), '# Login\n\nEdited while watching.\n');
+        await new Promise((r) => setTimeout(r, 400));
+      }
+      await seen(rerendered);
       await expect
         .poll(() => readFile(join(dir, 'spec.html'), 'utf8'))
         .toContain('Edited while watching.');
